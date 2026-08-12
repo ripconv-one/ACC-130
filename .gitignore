@@ -1,0 +1,86 @@
+# =========================================================
+# Python / Agent
+# =========================================================
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Python cache / compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Python tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Python build output
+build/
+dist/
+*.egg-info/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+
+# =========================================================
+# Node / Next.js
+# =========================================================
+
+node_modules/
+
+# Next.js generated output
+.next/
+out/
+
+# Other JS build/cache directories
+.turbo/
+.cache/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# =========================================================
+# Environment variables / Secrets
+# =========================================================
+
+.env
+.env.*
+!.env.example
+
+
+# =========================================================
+# IDE / OS
+# =========================================================
+
+.vscode/
+.idea/
+
+.DS_Store
+Thumbs.db
+
+
+# =========================================================
+# Temporary / local files
+# =========================================================
+
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Generated only for inspecting the repository
+project-tree.txt
