@@ -159,7 +159,7 @@ async def run_task(task_id: str) -> None:
                 )
 
                 try:
-                    tool_result = execute_tool(
+                    tool_result = await execute_tool(
                         tool_name,
                         arguments,
                     )
