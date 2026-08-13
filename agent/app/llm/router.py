@@ -1,3 +1,5 @@
+from typing import Any
+
 import httpx
 
 from app.llm.registry import ModelConfig, get_model
@@ -6,18 +8,18 @@ from app.llm.registry import ModelConfig, get_model
 OLLAMA_URL = "http://127.0.0.1:11434"
 
 
-async def generate(
+async def chat(
     model_id: str,
-    prompt: str,
-    system_prompt: str | None = None,
-) -> str:
+    messages: list[dict[str, Any]],
+    tools: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     config = get_model(model_id)
 
     if config.provider == "ollama":
-        return await generate_ollama(
+        return await chat_ollama(
             config=config,
-            prompt=prompt,
-            system_prompt=system_prompt,
+            messages=messages,
+            tools=tools,
         )
 
     raise ValueError(
@@ -25,42 +27,30 @@ async def generate(
     )
 
 
-async def generate_ollama(
+async def chat_ollama(
     config: ModelConfig,
-    prompt: str,
-    system_prompt: str | None = None,
-) -> str:
-    messages = []
+    messages: list[dict[str, Any]],
+    tools: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "model": config.model,
+        "messages": messages,
+        "stream": False,
+    }
 
-    if system_prompt:
-        messages.append(
-            {
-                "role": "system",
-                "content": system_prompt,
-            }
-        )
-
-    messages.append(
-        {
-            "role": "user",
-            "content": prompt,
-        }
-    )
+    if tools:
+        payload["tools"] = tools
 
     async with httpx.AsyncClient(
         timeout=300.0,
     ) as client:
         response = await client.post(
             f"{OLLAMA_URL}/api/chat",
-            json={
-                "model": config.model,
-                "messages": messages,
-                "stream": False,
-            },
+            json=payload,
         )
 
         response.raise_for_status()
 
         data = response.json()
 
-    return data["message"]["content"]
+    return data["message"]
