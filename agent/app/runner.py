@@ -1,12 +1,13 @@
-import asyncio
 from datetime import datetime, timezone
 
 from app.database import (
     complete_task,
     fail_task,
+    get_task,
     insert_event,
     update_task,
 )
+from app.llm.router import generate
 
 
 def now() -> str:
@@ -15,6 +16,15 @@ def now() -> str:
 
 async def run_task(task_id: str) -> None:
     try:
+        # Load the complete task from SQLite.
+        task = get_task(task_id)
+
+        if task is None:
+            raise ValueError(
+                f"Task {task_id} does not exist."
+            )
+
+        # Planning
         update_task(
             task_id,
             "planning",
@@ -24,12 +34,11 @@ async def run_task(task_id: str) -> None:
         insert_event(
             task_id,
             "planning",
-            "Agent is creating an execution plan.",
+            "Agent is preparing the task.",
             now(),
         )
 
-        await asyncio.sleep(2)
-
+        # Start model execution.
         update_task(
             task_id,
             "running",
@@ -38,48 +47,38 @@ async def run_task(task_id: str) -> None:
 
         insert_event(
             task_id,
-            "thinking",
-            "Agent is analyzing the task goal.",
+            "model_call",
+            f"Sending task to {task.model}.",
             now(),
         )
 
-        await asyncio.sleep(2)
+        # This is the real LLM call.
+        result = await generate(
+            model_id=task.model,
+            system_prompt=(
+                "You are a personal assistant to a team of researchers."
+                "Complete the user's assigned task carefully. "
+                "Provide a useful, clear final result. "
+                "Do not claim to have used tools or accessed "
+                "information that was not actually provided to you. Let the user know if this is the case."
+            ),
+            prompt=task.goal,
+        )
 
         update_task(
             task_id,
             "running",
-            60,
+            90,
         )
 
         insert_event(
             task_id,
-            "tool_call",
-            "Agent is preparing to use available tools.",
+            "model_response",
+            f"{task.model} returned a response.",
             now(),
         )
 
-        await asyncio.sleep(2)
-
-        update_task(
-            task_id,
-            "running",
-            85,
-        )
-
-        insert_event(
-            task_id,
-            "thinking",
-            "Agent is preparing the final result.",
-            now(),
-        )
-
-        await asyncio.sleep(2)
-
-        result = (
-            "Simulation complete. "
-            "The agent successfully processed the task."
-        )
-
+        # Persist Qwen's actual response.
         complete_task(
             task_id,
             result,

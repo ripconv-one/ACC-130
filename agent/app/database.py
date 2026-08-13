@@ -22,9 +22,14 @@ def initialize_database() -> None:
                 name TEXT NOT NULL,
                 goal TEXT NOT NULL,
                 agent TEXT NOT NULL,
+
+                provider TEXT NOT NULL DEFAULT 'ollama',
+                model TEXT NOT NULL DEFAULT 'qwen',
+
                 status TEXT NOT NULL,
                 progress INTEGER NOT NULL,
                 created_at TEXT NOT NULL,
+
                 result TEXT,
                 error TEXT
             )
@@ -61,6 +66,21 @@ def initialize_database() -> None:
                 "ALTER TABLE tasks ADD COLUMN error TEXT"
             )
 
+        if "provider" not in columns:
+            connection.execute(
+                """
+                ALTER TABLE tasks
+                ADD COLUMN provider TEXT NOT NULL DEFAULT 'ollama'
+                """
+            )
+
+        if "model" not in columns:
+            connection.execute(
+                """
+                ALTER TABLE tasks
+                ADD COLUMN model TEXT NOT NULL DEFAULT 'qwen'
+                """
+            )
 
 def insert_task(task: Task) -> None:
     with get_connection() as connection:
@@ -71,23 +91,26 @@ def insert_task(task: Task) -> None:
                 name,
                 goal,
                 agent,
+                provider,
+                model,
                 status,
                 progress,
                 created_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 task.id,
                 task.name,
                 task.goal,
                 task.agent,
+                task.provider,
+                task.model,
                 task.status,
                 task.progress,
                 task.created_at.isoformat(),
             ),
         )
-
 
 def get_task(task_id: str) -> Task | None:
     with get_connection() as connection:
@@ -108,6 +131,8 @@ def get_task(task_id: str) -> Task | None:
         name=row["name"],
         goal=row["goal"],
         agent=row["agent"],
+        provider=row["provider"],
+        model=row["model"],
         status=row["status"],
         progress=row["progress"],
         created_at=row["created_at"],

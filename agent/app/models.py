@@ -17,7 +17,11 @@ TaskStatus = Literal[
 class TaskCreate(BaseModel):
     name: str = Field(min_length=1, max_length=200)
     goal: str = Field(min_length=1)
+
     agent: str = "General Agent"
+
+    provider: str = "ollama"
+    model: str = "qwen"
 
 
 class Task(BaseModel):
@@ -25,8 +29,13 @@ class Task(BaseModel):
     name: str
     goal: str
     agent: str
+
+    provider: str
+    model: str
+
     status: TaskStatus
     progress: int
     created_at: datetime
+
     result: str | None = None
     error: str | None = None

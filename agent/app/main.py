@@ -56,6 +56,10 @@ def create_task(
         name=task_data.name,
         goal=task_data.goal,
         agent=task_data.agent,
+
+        provider=task_data.provider,
+        model=task_data.model,
+
         status="queued",
         progress=0,
         created_at=datetime.now(timezone.utc),
